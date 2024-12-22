@@ -1,11 +1,10 @@
-import prisma from "../db/index.js";
+import prisma from "../model/index.js";
 import bcrypt from "bcryptjs/dist/bcrypt.js";
-import jwt from "jsonwebtoken";
 
 export async function deleteUser(id) {
   try {
     await prisma.user.update({
-      where: { id },
+      where: { id: parseInt(id) },
       data: { deleted: true },
     });
     return { success: true, message: "User deleted" };
@@ -17,7 +16,7 @@ export async function deleteUser(id) {
 export async function deleteUserPermanently(id) {
   try {
     await prisma.user.delete({
-      where: { id },
+      where: { id: parseInt(id) },
     });
     return { success: true, message: "User deleted Permanently" };
   } catch (error) {
@@ -27,7 +26,11 @@ export async function deleteUserPermanently(id) {
 }
 export async function clearDatabase() {
   try {
-    await prisma.user.deleteMany({});
+    await prisma.user.deleteMany({
+      where: {
+        role: "user",
+      },
+    });
     return { success: true, message: "Database cleared" };
   } catch (error) {
     console.error("Error clearing database:", error);

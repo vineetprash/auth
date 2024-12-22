@@ -1,7 +1,5 @@
+import redisClient from "../redis/index.js";
 import {
-  createAdmin,
-  signup,
-  signin,
   addUser,
   clearDatabase,
   deleteUser,
@@ -9,8 +7,10 @@ import {
   findUser,
   allUsers,
   searchUsersByName,
-  searchUsersByemail,
-} from "./index.js";
+  searchUsersByEmail,
+} from "./userController.js";
+
+import { signin, signup, sendOTP, verifyOTP } from "./authController.js";
 async function adminConsole() {
   const args = process.argv.slice(2);
   const command = args[0];
@@ -56,7 +56,11 @@ async function adminConsole() {
       console.log(result);
       break;
     }
-
+    case "clearRedis": {
+      const result = await redisClient.flushDb();
+      console.log(result);
+      break;
+    }
     case "clearDatabase": {
       const result = await clearDatabase();
       console.log(result);

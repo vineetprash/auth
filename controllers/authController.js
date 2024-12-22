@@ -1,14 +1,17 @@
-import prisma from "../db/index.js";
+import prisma from "../model/index.js";
 import bcrypt from "bcryptjs/dist/bcrypt.js";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import fs from "fs";
+import { OTP_EXPIRY } from "../constants/index.js";
+import redisClient from "../redis/index.js";
+import { uniqueUser } from "../middlewares/auth.js";
 
 function tokenise(email, role) {
   const token = jwt.sign(
     {
       email: email,
-      expires: new Date().getTime() + 1000 * 60 * 60 * 60, // ONE HOUR
+      expires: new Date().getTime() + 1000 * 60 * 60, // ONE HOUR
       role: role,
     },
     process.env.JWT_SECRET
@@ -70,7 +73,7 @@ export async function resetPass(email, oldPass, newPass, bypass) {
 
   try {
     await prisma.user.update({
-      where: { id },
+      where: { email },
       data: { password: hashedNewPass },
     });
     return { success: true, message: "Password successfully reset" };
@@ -79,24 +82,25 @@ export async function resetPass(email, oldPass, newPass, bypass) {
   }
 }
 
-export async function sendOTP(req, email) {
-  const otp = Math.floor(1000 + Math.random() * 9000);
-  const user = await prisma.user.findUnique({
-    where: {
-      email,
-      deleted: false,
-    },
-  });
-  if (!user) {
-    return { success: false, message: "User not found" };
+export async function sendOTP(email) {
+  const otp = Math.floor(10000 + Math.random() * 90000);
+  const user = uniqueUser(email);
+  if (!user) return { success: false, message: "User not found" };
+  const key = `otp:${email}`;
+  const existingOTP = await redisClient.get(key);
+  if (existingOTP) {
+    return {
+      success: false,
+      message:
+        "An OTP is already sent. Please wait until it expires or verify the existing OTP.",
+    };
   }
-  sendMail(otp, user.email);
-  req.session.otp = otp;
-  return { success: false, message: "OTP send to" + email };
+  sendMail(otp, email);
+  await redisClient.setEx(key, OTP_EXPIRY, otp.toString());
+  return { success: true, message: "OTP sent to: " + email };
 }
-function sendMail(otp, recepient) {
-  // Create a transporter object
 
+function sendMail(otp, recepient) {
   const embed = fs
     .readFileSync(".\\view\\otp.html")
     .toString()
@@ -129,16 +133,29 @@ function sendMail(otp, recepient) {
   });
 }
 
-export async function verifyOTP(req, otp, newPass) {
-  console.log(otp, req.session.otp);
-  if (otp === req.session.otp) {
+export async function verifyOTP(email, otp, newPass) {
+  const key = `otp:${email}`;
+  const storedOtp = await redisClient.get(key);
+  console.log(otp, storedOtp);
+  if (!otp) {
+    return { success: false, message: "OTP Expired" };
+  }
+
+  if (otp !== storedOtp) {
+    return { success: false, message: "Invalid OTP" };
+  }
+
+  if (otp === storedOtp) {
     const res = await resetPass(email, "", newPass, true);
-    if (res.success == true) {
+    if (res.success) {
+      await redisClient.del(key);
       return { success: true, message: "Password reset successfully" };
     } else {
-      return { success: false, message: "Password reset failed" };
+      return {
+        success: false,
+        message: "Password reset failed",
+        error: res.message,
+      };
     }
-  } else {
-    return { success: false, message: "Invalid OTP" };
   }
 }

@@ -1,10 +1,11 @@
-import prisma from "../db/index.js";
+import prisma from "../model/index.js";
 import jwt from "jsonwebtoken";
 
 export async function authoriseUser(req, res, next) {
-  const token = req.header.Authorization.split(" ")[1];
+  const token = req.header("Authorization").split(" ")[1];
+  let decoded;
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (JsonWebTokenError) {
     console.log("Invalid signature");
     return res.json({ success: false, message: "Invalid signature" });
@@ -22,6 +23,7 @@ export async function authoriseAdmin(req, res, next) {
   let decoded;
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log(decoded);
   } catch (JsonWebTokenError) {
     console.log("Invalid signature");
     return res.json({ success: false, message: "Invalid signature" });
@@ -31,20 +33,20 @@ export async function authoriseAdmin(req, res, next) {
     return res.json({ success: false, message: "Token has expired" });
   }
   console.log(decoded);
-  if (decoded.role !== role) {
+  if (decoded.role !== "admin") {
     return res.json({ success: false, message: "Unauthorised" });
   }
   return next();
 }
 
-export async function uniqueUsername(req, res, next) {
-  const { username } = req.body;
+export async function uniqueUser(email) {
   const result = await prisma.user.findMany({
     where: {
-      username: username,
+      email,
+      deleted: false,
     },
   });
 
-  if (result) return false;
-  return true;
+  if (result) return null;
+  return user;
 }

@@ -24,7 +24,7 @@ import {
 } from "../../controllers/authController.js";
 import { z } from "zod";
 export const userRouter = express.Router();
-userRouter.use(express.json());
+
 // Signup route
 userRouter.post("/signup", validateUserInput, async (req, res) => {
   const response = await signup(req, res);
@@ -45,18 +45,19 @@ userRouter.post("/send-otp", async (req, res) => {
     return res.status(400).json({ message: "Your email is invalid" });
   }
 
-  const response = await sendOTP(req, email.data);
+  const response = await sendOTP(email.data);
   res.json(response);
 });
 
 //  Verify otp route
 userRouter.post("/verify-otp", async (req, res) => {
+  const email = z.string().email().safeParse(req.body.email);
   const otp = z.string().safeParse(req.body.otp);
   const newPass = z.string().safeParse(req.body.newPassword);
-  if (!otp.success || !newPass.success) {
+  if (!otp.success || !newPass.success || !email.success) {
     return res.status(400).json({ message: "Invalid request" });
   }
-  const response = await verifyOTP(req, otp.data, newPass.data);
+  const response = await verifyOTP(email.data, otp.data, newPass.data);
   res.json(response);
 });
 

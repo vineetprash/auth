@@ -7,18 +7,6 @@ import { OTP_EXPIRY } from "../constants/index.js";
 import redisClient from "../redis/index.js";
 import { uniqueUser } from "../middlewares/auth.js";
 
-function tokenise(email, role) {
-  const token = jwt.sign(
-    {
-      email: email,
-      expires: new Date().getTime() + 1000 * 60 * 60, // ONE HOUR
-      role: role,
-    },
-    process.env.JWT_SECRET
-  );
-  return token;
-}
-
 export async function signup(req, res, next) {
   const { email, password, name } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10); // Hash password

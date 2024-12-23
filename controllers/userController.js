@@ -1,5 +1,18 @@
 import prisma from "../model/index.js";
 import bcrypt from "bcryptjs/dist/bcrypt.js";
+import jwt from "jsonwebtoken";
+
+function tokenise(email, role) {
+  const token = jwt.sign(
+    {
+      email: email,
+      expires: new Date().getTime() + 1000 * 60 * 60, // ONE HOUR
+      role: role,
+    },
+    process.env.JWT_SECRET
+  );
+  return token;
+}
 
 export async function deleteUser(id) {
   try {

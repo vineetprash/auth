@@ -1,5 +1,6 @@
 import redisClient from "../redis/index.js";
 import {
+  createAdmin,
   addUser,
   clearDatabase,
   deleteUser,
@@ -11,7 +12,19 @@ import {
 } from "./userController.js";
 
 import { signin, signup, sendOTP, verifyOTP } from "./authController.js";
+
 async function adminConsole() {
+  function tokenise(email, role) {
+    const token = jwt.sign(
+      {
+        email: email,
+        expires: new Date().getTime() + 1000 * 60 * 60, // ONE HOUR
+        role: role,
+      },
+      process.env.JWT_SECRET
+    );
+    return token;
+  }
   const args = process.argv.slice(2);
   const command = args[0];
 

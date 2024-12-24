@@ -1,0 +1,360 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "REST API",
+    "description": "API documentation for authentication and user management."
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "schemes": ["http"],
+  "paths": {
+    "auth": {
+      "/v1/user/signup": {
+        "post": {
+          "description": "Create a new user account.",
+          "parameters": [
+            {
+              "name": "body",
+              "in": "body",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "example": "user@example.com" },
+                  "password": { "example": "securepassword123" },
+                  "name": { "example": "John Doe" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User successfully signed up.",
+              "examples": { "message": "Signup successful." }
+            },
+            "400": {
+              "description": "Invalid request payload.",
+              "examples": { "error": "Invalid email format." }
+            },
+            "429": {
+              "description": "Too many requests.",
+              "examples": { "error": "Rate limit exceeded." }
+            },
+            "500": {
+              "description": "Server error.",
+              "examples": { "error": "Unexpected server error." }
+            }
+          }
+        }
+      },
+      "/v1/user/signin": {
+        "post": {
+          "description": "Authenticate a user.",
+          "parameters": [
+            {
+              "name": "body",
+              "in": "body",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "example": "user@example.com" },
+                  "password": { "example": "securepassword123" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Authentication successful.",
+              "examples": { "token": "jwt-token" }
+            },
+            "400": {
+              "description": "Invalid credentials.",
+              "examples": { "error": "Incorrect email or password." }
+            },
+            "429": {
+              "description": "Too many requests.",
+              "examples": { "error": "Rate limit exceeded." }
+            },
+            "500": {
+              "description": "Server error.",
+              "examples": { "error": "Unexpected server error." }
+            }
+          }
+        }
+      },
+      "/v1/user/send-otp": {
+        "post": {
+          "description": "Send a one-time password (OTP) to the user's email.",
+          "parameters": [
+            {
+              "name": "body",
+              "in": "body",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "example": "user@example.com" }
+                },
+                "required": ["email"]
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OTP sent successfully.",
+              "examples": { "message": "OTP sent to email." }
+            },
+            "400": {
+              "description": "Invalid email.",
+              "examples": { "error": "Email not registered." }
+            },
+            "429": {
+              "description": "Too many requests.",
+              "examples": { "error": "Rate limit exceeded." }
+            },
+            "500": {
+              "description": "Server error.",
+              "examples": { "error": "Unexpected server error." }
+            }
+          }
+        }
+      },
+      "/v1/user/verify-otp": {
+        "post": {
+          "description": "Verify an OTP and reset the user's password.",
+          "parameters": [
+            {
+              "name": "body",
+              "in": "body",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "example": "user@example.com" },
+                  "otp": { "example": "123456" },
+                  "newPassword": { "example": "newsecurepassword" }
+                },
+                "required": ["email", "otp", "newPassword"]
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OTP verified and password updated.",
+              "examples": { "message": "Password successfully reset." }
+            },
+            "400": {
+              "description": "Invalid OTP or payload.",
+              "examples": { "error": "Invalid OTP." }
+            },
+            "429": {
+              "description": "Too many requests.",
+              "examples": { "error": "Rate limit exceeded." }
+            },
+            "500": {
+              "description": "Server error.",
+              "examples": { "error": "Unexpected server error." }
+            }
+          }
+        }
+      }
+    },
+    "user": {
+      "/v1/user/clear-database": {
+        "delete": {
+          "description": "Clear the database (admin-only).",
+          "parameters": [
+            {
+              "name": "Authorization",
+              "in": "header",
+              "type": "string",
+              "description": "Bearer token for admin authentication."
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Database cleared successfully.",
+              "examples": { "message": "Database cleared." }
+            },
+            "429": {
+              "description": "Too many requests.",
+              "examples": { "error": "Rate limit exceeded." }
+            },
+            "500": {
+              "description": "Server error.",
+              "examples": { "error": "Unexpected server error." }
+            }
+          }
+        }
+      },
+      "/v1/user/add-user": {
+        "post": {
+          "description": "Add a new user (admin-only).",
+          "parameters": [
+            {
+              "name": "Authorization",
+              "in": "header",
+              "type": "string",
+              "description": "Bearer token for admin authentication."
+            },
+            {
+              "name": "body",
+              "in": "body",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "example": "newuser@example.com" },
+                  "password": { "example": "securepassword123" },
+                  "name": { "example": "Jane Doe" }
+                },
+                "required": ["email", "password", "name"]
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User added successfully.",
+              "examples": { "message": "User added." }
+            },
+            "429": {
+              "description": "Too many requests.",
+              "examples": { "error": "Rate limit exceeded." }
+            },
+            "500": {
+              "description": "Server error.",
+              "examples": { "error": "Unexpected server error." }
+            }
+          }
+        }
+      },
+      "/v1/user/delete-user/{id}": {
+        "patch": {
+          "description": "",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "name": "Authorization",
+              "in": "header",
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/v1/user/delete-user-permanently/{id}": {
+        "delete": {
+          "description": "",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "name": "Authorization",
+              "in": "header",
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/v1/user/find-user/{id}": {
+        "get": {
+          "description": "",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "name": "Authorization",
+              "in": "header",
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/v1/user/all-users": {
+        "get": {
+          "description": "",
+          "parameters": [
+            {
+              "name": "Authorization",
+              "in": "header",
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/v1/user/search-users-by-name/{name}": {
+        "get": {
+          "description": "",
+          "parameters": [
+            {
+              "name": "name",
+              "in": "path",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "name": "Authorization",
+              "in": "header",
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/v1/user/search-users-by-email/{email}": {
+        "get": {
+          "description": "",
+          "parameters": [
+            {
+              "name": "email",
+              "in": "path",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      }
+    }
+  }
+}

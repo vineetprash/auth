@@ -7,7 +7,7 @@ import { ipRateLimiter } from "./middlewares/ratelimit.js";
 
 const app = new express();
 
-app.use(ipRateLimiter);
+// app.use(ipRateLimiter);
 app.use(cors());
 app.use(express.json());
 
